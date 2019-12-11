@@ -1,10 +1,10 @@
-﻿from tkinter import *
-import tkinter.messageboxhttps://github.com/RandGor/mpiaa-draughts/blob/master/xuita.py
+from tkinter import *
+import tkinter.messagebox
 import random
 import time
 import copy
 
-	
+
 
 gl_okno=Tk()
 m = Menu(gl_okno) 
