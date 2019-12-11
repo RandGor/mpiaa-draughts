@@ -1,5 +1,5 @@
 ﻿from tkinter import *
-import tkinter.messagebox
+import tkinter.messageboxhttps://github.com/RandGor/mpiaa-draughts/blob/master/xuita.py
 import random
 import time
 import copy
