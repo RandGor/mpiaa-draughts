@@ -9,11 +9,12 @@ import copy
 windowMain=Tk()
 m = Menu(windowMain) 
 windowMain.config(menu=m)
-
+resolution=600
+square_size=resolution//8
 
 
 windowMain.title('Английские Шашки')#заголовок окна
-desk=Canvas(windowMain, width=800,height=800,bg='#FFFFFF')
+desk=Canvas(windowMain, width=resolution,height=resolution,bg='#FFFFFF')
 desk.pack()
 
 comp_moves=()#конечный список ходов компьютера
@@ -56,23 +57,22 @@ def draw(x_pos_1,y_pos_1,x_pos_2,y_pos_2):#рисуем игровое поле
     global checkers
     global field
     global red_border,green_border
-    k=100
     x=0
     desk.delete('all')
 
-    while x<8*k:#рисуем доску
-        y=1*k
-        while y<8*k:
-            desk.create_rectangle(x, y, x+k, y+k,fill="black")
-            y+=2*k
-        x+=2*k
-    x=1*k
-    while x<8*k:#рисуем доску
+    while x<8*square_size:#рисуем доску
+        y=1*square_size
+        while y<8*square_size:
+            desk.create_rectangle(x, y, x+square_size, y+square_size,fill="black")
+            y+=2*square_size
+        x+=2*square_size
+    x=square_size
+    while x<8*square_size:#рисуем доску
         y=0
-        while y<8*k:
-            desk.create_rectangle(x, y, x+k, y+k,fill="black")
-            y+=2*k
-        x+=2*k
+        while y<8*square_size:
+            desk.create_rectangle(x, y, x+square_size, y+square_size,fill="black")
+            y+=2*square_size
+        x+=2*square_size
     red_border=desk.create_rectangle(-2, -2, -2, -2,outline="red",width=2)
     green_border=desk.create_rectangle(-2, -2, -2, -2,outline="green",width=2)
 
@@ -81,17 +81,17 @@ def draw(x_pos_1,y_pos_1,x_pos_2,y_pos_2):#рисуем игровое поле
             z=field[y][x]
             if z:
                 if (x_pos_1,y_pos_1)!=(x,y):#стоячие пешки?
-                    desk.create_image(x*k,y*k, anchor=NW, image=checkers[z])
+                    desk.create_image(x*square_size,y*square_size, anchor=NW, image=checkers[z])
     #рисуем активную пешку
     z=field[y_pos_1][x_pos_1]
     if z:
-        desk.create_image(x_pos_1*k,y_pos_1*k, anchor=NW, image=checkers[z],tag='ani')
+        desk.create_image(x_pos_1*square_size,y_pos_1*square_size, anchor=NW, image=checkers[z],tag='ani')
     #вычисление коэф. для анимации
     kx = 1 if x_pos_1<x_pos_2 else -1
     ky = 1 if y_pos_1<y_pos_2 else -1
     for i in range(abs(x_pos_1-x_pos_2)):#анимация перемещения пешки
         for ii in range(33):
-            desk.move('ani',0.03*k*kx,0.03*k*ky)
+            desk.move('ani',0.03*square_size*kx,0.03*square_size*ky)
             desk.update()#обновление
             time.sleep(0.002)
 
@@ -141,15 +141,15 @@ def message(s):
         
 
 def pos_1(event):#выбор клетки для хода 1
-    x,y=(event.x)//100,(event.y)//100#вычисляем координаты клетки
-    desk.coords(green_border,x*100,y*100,x*100+100,y*100+100)#рамка в выбранной клетке
+    x,y=(event.x)//square_size,(event.y)//square_size#вычисляем координаты клетки
+    desk.coords(green_border,x*square_size,y*square_size,x*square_size+square_size,y*square_size+square_size)#рамка в выбранной клетке
 
 def pos_2(event):#выбор клетки для хода 2
     global pos1_x,pos1_y,pos2_x,pos2_y
     global playersTurn
-    x,y=(event.x)//100,(event.y)//100#вычисляем координаты клетки
+    x,y=(event.x)//square_size,(event.y)//square_size#вычисляем координаты клетки
     if field[y][x]==1 or field[y][x]==2:#проверяем пешку игрока в выбранной клетке
-        desk.coords(red_border,x*100,y*100,x*100+100,y*100+100)#рамка в выбранной клетке
+        desk.coords(red_border,x*square_size,y*square_size,x*square_size+square_size,y*square_size+square_size)#рамка в выбранной клетке
         pos1_x,pos1_y=x,y
     else:
         if pos1_x!=-1:#клетка выбрана
