@@ -1,13 +1,7 @@
 # mpiaa-draughts
+## HOW TO INIT THIS GAME:
+`pip install Pillow`
+`pip install pythonds`
+
 ## TODO: 
-~~1) Blacks turn first~~
-
-~~2) Can't kill by back~~
-
-~~3) King can't fly~~
-
-4) Fill gaps
-
-~~5) People should turn first, because computer is too smart~~
-
-6) Add dificult mode - by adjusting special variable
+1) Discribe all methods and variables, such as `l_rez,k_rez,o_rez` and other
