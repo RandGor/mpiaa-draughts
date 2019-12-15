@@ -1,4 +1,6 @@
 from tkinter import *
+from PIL import Image
+from PIL import ImageTk
 import tkinter.messagebox
 import random
 import time
@@ -9,13 +11,10 @@ import copy
 windowMain=Tk()
 m = Menu(windowMain) 
 windowMain.config(menu=m)
-resolution=600
-square_size=resolution//8
 
 
 windowMain.title('Английские Шашки')#заголовок окна
-desk=Canvas(windowMain, width=resolution,height=resolution,bg='#FFFFFF')
-desk.pack()
+
 
 comp_moves=()#конечный список ходов компьютера
 intelligence=1#количество предсказываемых компьютером ходов
@@ -24,13 +23,28 @@ o_rez=0
 pos1_x=-1#клетка не задана
 playersTurn=True#определение хода игрока(да)
 
+resolution=640#размер поля
+screen_width, screen_height = windowMain.winfo_screenwidth(), windowMain.winfo_screenheight()#определение текущего разрешения экрана
+if screen_width>810 and screen_height>810:#адаптация поля под разрешение экрана
+    resolution=800
+    if screen_width>1000 and screen_height>1000:
+        resolution=1000
 
-def load_images():#загружаем изображения пешек
+square_size=resolution//8#вывод размера клетки через размер поля
+border_width=2#ширина выделения клетки
+anim_frames=30#количество кадров в анимации передвижения фигуры на одну клетку
+anim_shift=1/anim_frames#величина сдвига фигуры за каждый кадр
+desk=Canvas(windowMain, width=resolution,height=resolution,bg='#FFFFFF')#запонение игрового поля белым цветом
+desk.pack()
+
+def load_images():#загружаем изображения пешек и изменяем размер под размер поля
     global checkers
-    i1=PhotoImage(file="res\\1h.gif")
-    i2=PhotoImage(file="res\\1hk.gif")
-    i3=PhotoImage(file="res\\1b.gif")
-    i4=PhotoImage(file="res\\1bk.gif")
+    i1 = ImageTk.PhotoImage(Image.open(r"res\\black.png").resize((square_size,square_size), Image.ANTIALIAS))
+    i2 = ImageTk.PhotoImage(Image.open(r"res\\black_king.png").resize((square_size,square_size), Image.ANTIALIAS))
+    i3 = ImageTk.PhotoImage(Image.open(r"res\\white.png").resize((square_size,square_size), Image.ANTIALIAS))
+    i4 = ImageTk.PhotoImage(Image.open(r"res\\white_king.png").resize((square_size,square_size), Image.ANTIALIAS))
+    
+    
     checkers=[0,i1,i2,i3,i4]
 
 def new_Game():#начинаем новую игру
@@ -60,21 +74,21 @@ def draw(x_pos_1,y_pos_1,x_pos_2,y_pos_2):#рисуем игровое поле
     x=0
     desk.delete('all')
 
-    while x<8*square_size:#рисуем доску
+    while x<8*square_size:#рисуем доску, нечётные строки
         y=1*square_size
         while y<8*square_size:
             desk.create_rectangle(x, y, x+square_size, y+square_size,fill="black")
             y+=2*square_size
         x+=2*square_size
     x=square_size
-    while x<8*square_size:#рисуем доску
+    while x<8*square_size:#рисуем доску, чётные строки
         y=0
         while y<8*square_size:
             desk.create_rectangle(x, y, x+square_size, y+square_size,fill="black")
             y+=2*square_size
         x+=2*square_size
-    red_border=desk.create_rectangle(-2, -2, -2, -2,outline="red",width=2)
-    green_border=desk.create_rectangle(-2, -2, -2, -2,outline="green",width=2)
+    red_border=desk.create_rectangle(0,0,0,0,outline="red",width=border_width)
+    green_border=desk.create_rectangle(0,0,0,0,outline="green",width=border_width)
 
     for y in range(8):#рисуем стоячие пешки
         for x in range(8):
@@ -90,8 +104,8 @@ def draw(x_pos_1,y_pos_1,x_pos_2,y_pos_2):#рисуем игровое поле
     kx = 1 if x_pos_1<x_pos_2 else -1
     ky = 1 if y_pos_1<y_pos_2 else -1
     for i in range(abs(x_pos_1-x_pos_2)):#анимация перемещения пешки
-        for ii in range(33):
-            desk.move('ani',0.03*square_size*kx,0.03*square_size*ky)
+        for ii in range(anim_frames):
+            desk.move('ani',anim_shift*square_size*kx,anim_shift*square_size*ky)
             desk.update()#обновление
             time.sleep(0.002)
 
@@ -114,13 +128,8 @@ def restart():
 def author():
     tkinter.messagebox.showinfo("Авторы", "Демидович Егор\nМуравьёв Михаил\nЦыганков Алексей")
 
-
-def rules():
-    tkinter.messagebox.showinfo("Правила", "*****")
-
     
 fm.add_command(label="Новая игра",command=restart)
-fm.add_command(label="Правила",command=rules)
 fm.add_command(label="Авторы",command=author)
 fm.add_command(label="Выход",command=destroy)
 
@@ -142,14 +151,15 @@ def message(s):
 
 def pos_1(event):#выбор клетки для хода 1
     x,y=(event.x)//square_size,(event.y)//square_size#вычисляем координаты клетки
-    desk.coords(green_border,x*square_size,y*square_size,x*square_size+square_size,y*square_size+square_size)#рамка в выбранной клетке
+    if 0<=x and x<=7 and 0<=y and y<=7:
+        desk.coords(green_border,x*square_size+border_width//2,y*square_size+border_width//2,x*square_size+square_size,y*square_size+square_size)#рамка в выбранной клетке
 
 def pos_2(event):#выбор клетки для хода 2
     global pos1_x,pos1_y,pos2_x,pos2_y
     global playersTurn
     x,y=(event.x)//square_size,(event.y)//square_size#вычисляем координаты клетки
     if field[y][x]==1 or field[y][x]==2:#проверяем пешку игрока в выбранной клетке
-        desk.coords(red_border,x*square_size,y*square_size,x*square_size+square_size,y*square_size+square_size)#рамка в выбранной клетке
+        desk.coords(red_border,x*square_size,y*square_size,x*square_size+square_size+border_width//2,y*square_size+square_size+border_width//2)#рамка в выбранной клетке
         pos1_x,pos1_y=x,y
     else:
         if pos1_x!=-1:#клетка выбрана
