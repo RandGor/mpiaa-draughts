@@ -3,8 +3,3 @@
 `pip install Pillow`
 
 `pip install pythonds`
-
-## TODO: 
-1) Discribe all methods and variables, such as `l_rez,k_rez,o_rez` and other
-
-2) If player is blocked he lose
