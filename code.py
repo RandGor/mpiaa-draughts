@@ -18,10 +18,10 @@ windowMain.title('Английские Шашки')#заголовок окна
 
 comp_moves=()#конечный список ходов компьютера
 intelligence=1#количество предсказываемых компьютером ходов
-k_rez=0#!!!
-o_rez=0
+countof_result=0#число сложений summary_result
+summary_result=0#разница в очках между игроками
 pos1_x=-1#клетка не задана
-playersTurn=True#определение хода игрока(да)
+playersTurn=True#очередь ли игрока ходить
 
 resolution=640#размер поля
 screen_width, screen_height = windowMain.winfo_screenwidth(), windowMain.winfo_screenheight()#определение текущего разрешения экрана
@@ -58,6 +58,14 @@ def new_Game():#начинаем новую игру
           [1,0,1,0,1,0,1,0],
           [0,1,0,1,0,1,0,1],
           [1,0,1,0,1,0,1,0]]
+    field=[[0,0,0,0,0,0,0,0],
+          [0,0,0,0,0,0,0,0],
+          [0,0,3,0,0,0,0,0],
+          [0,3,0,3,0,0,0,0],
+          [0,0,3,0,0,0,0,0],
+          [0,1,0,0,0,0,0,0],
+          [0,0,0,0,0,0,0,0],
+          [0,0,0,0,0,0,0,0]]
 
 def draw(x_pos_1,y_pos_1,x_pos_2,y_pos_2):#рисуем игровое поле
     global checkers
@@ -108,16 +116,16 @@ def draw(x_pos_1,y_pos_1,x_pos_2,y_pos_2):#рисуем игровое поле
 fm = Menu(m) #создается пункт меню с размещением на основном меню (m)
 m.add_cascade(label="Меню",menu=fm)
 
-def destroy():
+def destroy():#выход из игры
 	exit()
 
-def restart():
+def restart():#запуск игры
         global playersTurn
         new_Game()
         draw(-1,-1,-1,-1)#рисуем игровое поле
         playersTurn=True#ход игрока доступен
 
-def author():
+def author():#окно с авторами
     tkinter.messagebox.showinfo("Авторы", "Демидович Егор\nМуравьёв Михаил\nЦыганков Алексей")
 
     
@@ -128,25 +136,27 @@ fm.add_command(label="Выход",command=destroy)
 
 
 
-def message(s):
+def message(s):#окно с сообщением
     z='Игра завершена'
     if s==1:
-        i=tkinter.messagebox.askyesno(title=z, message='Вы победили!\nНажмите "Да" что бы начать заново.',icon='info')
+        i=tkinter.messagebox.askyesno(title=z, message='Вы победили!\nНачать игру заново?',icon='info')
     if s==2:
-        i=tkinter.messagebox.askyesno(title=z, message='Вы проиграли!\nНажмите "Да" что бы начать заново.',icon='info')
+        i=tkinter.messagebox.askyesno(title=z, message='Вы проиграли!\nНачать игру заново?',icon='info')
     if s==3:
-        i=tkinter.messagebox.askyesno(title=z, message='Ходов больше нет.\nНажмите "Да" что бы начать заново.',icon='info')
+        i=tkinter.messagebox.askyesno(title=z, message='Вы победили! У противника не осталось ходов.\nНачать игру заново?',icon='info')
+    if s==4:
+        i=tkinter.messagebox.askyesno(title=z, message='Вы проиграли! У вас не осталось ходов.\nНачать игру заново?',icon='info')
     if i:
         restart()
 
         
 
-def pos_1(event):#выбор клетки для хода 1
+def pos_1(event):#выбор клетки для хода, ведение мышью
     x,y=(event.x)//square_size,(event.y)//square_size#вычисляем координаты клетки
     if 0<=x and x<=7 and 0<=y and y<=7:
         desk.coords(green_border,x*square_size+border_width//2,y*square_size+border_width//2,x*square_size+square_size,y*square_size+square_size)#рамка в выбранной клетке
 
-def pos_2(event):#выбор клетки для хода 2
+def pos_2(event):#выбор клетки для хода, клик по клетке
     global pos1_x,pos1_y,pos2_x,pos2_y
     global playersTurn
     x,y=(event.x)//square_size,(event.y)//square_size#вычисляем координаты клетки
@@ -173,18 +183,18 @@ def comp_turn():#ход компьютера
         dh=len(comp_moves[th])#длина хода
         for i in range(dh-1):
             #выполняем ход
-            moves=hod(1,comp_moves[th][i][0],comp_moves[th][i][1],comp_moves[th][1+i][0],comp_moves[th][1+i][1])
+            moves=turn(1,comp_moves[th][i][0],comp_moves[th][i][1],comp_moves[th][1+i][0],comp_moves[th][1+i][1])
         comp_moves=[]#очищаем список ходов
         playersTurn=True#ход игрока доступен
 
     #определяем победителя 
-    s_k,s_i=scan()
-    if not(s_i):
+    count_white,count_black=scan()
+    if not(count_black):
             message(2)
-    elif not(s_k):
+    elif not(count_white):
             message(1)
     elif playersTurn and not(moves_player()):
-            message(3)
+            message(4)
     elif not(playersTurn) and not(moves_comp()):
             message(3)
 
@@ -194,41 +204,42 @@ def moves_comp():#составляем список ходов компьюте�
         moves=get_comp_turns_extra([])#здесь проверяем оставшиеся ходы
     return moves
 
-def check_comp(tur,n_moves,moves):#!!!
+def check_comp(tur,n_moves,moves):#проверка ходов компьютера
     global field
     global comp_moves
-    global l_rez,k_rez,o_rez
+    global best_result#лучший результат хода
+    global countof_result,summary_result    
     if not(moves):#если список ходов пустой...
         moves=moves_comp()#заполняем
 
     if moves:
         k_field=copy.deepcopy(field)#копируем поле
         for ((pos1_x,pos1_y),(pos2_x,pos2_y)) in moves:#проходим все ходы по списку
-            t_moves=hod(0,pos1_x,pos1_y,pos2_x,pos2_y)
+            t_moves=turn(0,pos1_x,pos1_y,pos2_x,pos2_y)
             if t_moves:#если существует ещё ход
                 check_comp(tur,(n_moves+((pos1_x,pos1_y),)),t_moves)
             else:
                 check_player(tur,[])
                 if tur==1:
-                    t_rez=o_rez/k_rez
+                    t_rez=summary_result/countof_result
                     if not(comp_moves):#записыаем если пустой
                         comp_moves=(n_moves+((pos1_x,pos1_y),(pos2_x,pos2_y)),)
-                        l_rez=t_rez#сохряняем наилучший результат
+                        best_result=t_rez#сохряняем наилучший результат
                     else:
-                        if t_rez==l_rez:
+                        if t_rez==best_result:
                             comp_moves=comp_moves+(n_moves+((pos1_x,pos1_y),(pos2_x,pos2_y)),)
-                        if t_rez>l_rez:
+                        if t_rez>best_result:
                             comp_moves=()
                             comp_moves=(n_moves+((pos1_x,pos1_y),(pos2_x,pos2_y)),)
-                            l_rez=t_rez#сохряняем наилучший результат
-                    o_rez=0
-                    k_rez=0
+                            best_result=t_rez#сохряняем наилучший результат
+                    summary_result=0
+                    countof_result=0
 
             field=copy.deepcopy(k_field)#возвращаем поле
     else:
-        s_k,s_i=scan()#подсчёт результата хода
-        o_rez+=(s_k-s_i)
-        k_rez+=1
+        count_white,count_black=scan()#подсчёт результата хода
+        summary_result+=(count_white-count_black)
+        countof_result+=1
 
 def moves_player():#составляем список ходов игрока
     moves=get_player_turns([])#здесь проверяем обязательные ходы
@@ -236,8 +247,8 @@ def moves_player():#составляем список ходов игрока
         moves=get_player_turns_extra([])#здесь проверяем оставшиеся ходы
     return moves
     
-def check_player(tur,moves):
-    global field,k_rez,o_rez
+def check_player(tur,moves):#проверка ходов игрока
+    global field,countof_result,summary_result
     global intelligence
     if not(moves):
         moves=moves_player()
@@ -245,50 +256,50 @@ def check_player(tur,moves):
     if moves:#проверяем наличие доступных ходов
         k_field=copy.deepcopy(field)#копируем поле
         for ((pos1_x,pos1_y),(pos2_x,pos2_y)) in moves:                    
-            t_moves=hod(0,pos1_x,pos1_y,pos2_x,pos2_y)
+            t_moves=turn(0,pos1_x,pos1_y,pos2_x,pos2_y)
             if t_moves:#если существует ещё ход
                 check_player(tur,t_moves)
             else:
                 if tur<intelligence:
                     check_comp(tur+1,(),[])
                 else:
-                    s_k,s_i=scan()#подсчёт результата хода
-                    o_rez+=(s_k-s_i)
-                    k_rez+=1
+                    count_white,count_black=scan()#подсчёт результата хода
+                    summary_result+=(count_white-count_black)
+                    countof_result+=1
 
             field=copy.deepcopy(k_field)#возвращаем поле
     else:#доступных ходов нет
-        s_k,s_i=scan()#подсчёт результата хода
-        o_rez+=(s_k-s_i)
-        k_rez+=1
+        count_white,count_black=scan()#подсчёт результата хода
+        summary_result+=(count_white-count_black)
+        countof_result+=1
 
 def scan():#подсчёт пешек на поле
     global field
-    s_i=0
-    s_k=0
+    count_black=0#очки чёрных
+    count_white=0#очки белых
     for i in range(8):
         for ii in field[i]:
-            if ii==1:s_i+=1
-            if ii==2:s_i+=3
-            if ii==3:s_k+=1
-            if ii==4:s_k+=3
-    return s_k,s_i
+            if ii==1:count_black+=1
+            if ii==2:count_black+=3
+            if ii==3:count_white+=1
+            if ii==4:count_white+=3
+    return count_white,count_black
 
-def player_turn():
+def player_turn():#ход игрока
     global pos1_x,pos1_y,pos2_x,pos2_y
     global playersTurn
     playersTurn=False#считаем ход игрока выполненным
     moves=moves_player()
     if moves:
         if ((pos1_x,pos1_y),(pos2_x,pos2_y)) in moves:#проверяем ход на соответствие правилам игры
-            t_moves=hod(1,pos1_x,pos1_y,pos2_x,pos2_y)#если всё хорошо, делаем ход            
+            t_moves=turn(1,pos1_x,pos1_y,pos2_x,pos2_y)#если всё хорошо, делаем ход            
             if t_moves:#если есть ещё ход той же пешкой
                 playersTurn=True#считаем ход игрока невыполненным
         else:
             playersTurn=True#считаем ход игрока невыполненным
     desk.update()#!!!обновление
 
-def hod(f,pos1_x,pos1_y,pos2_x,pos2_y):
+def turn(f,pos1_x,pos1_y,pos2_x,pos2_y):#делаем(f=1) или просматриваем(f=0) ход по заданным координатам
     global field
     if f:draw(pos1_x,pos1_y,pos2_x,pos2_y)#рисуем игровое поле
     #превращение
@@ -325,7 +336,7 @@ def get_comp_turns(moves):#проверка наличия обязательн�
             moves=get_comp_turn(moves,x,y)
     return moves
 
-def get_comp_turn(moves,x,y):
+def get_comp_turn(moves,x,y):#проверка очередного хода компьютера
     if field[y][x]==3:#пешка
         for ix,iy in (-1,1),(1,1):
             if 0<=y+iy*2<=7 and 0<=x+ix*2<=7:
@@ -366,7 +377,7 @@ def get_player_turns(moves):#проверка наличия обязатель�
             moves=get_player_turn(moves,x,y)
     return moves
 
-def get_player_turn(moves,x,y):
+def get_player_turn(moves,x,y):#проверка очередного хода игрока
     if field[y][x]==1:#пешка
         for ix,iy in (-1,-1),(1,-1):
             if 0<=y+iy*2<=7 and 0<=x+ix*2<=7:
